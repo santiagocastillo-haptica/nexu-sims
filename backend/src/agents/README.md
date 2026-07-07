@@ -24,3 +24,8 @@ No es necesario tocar `id`, `avatarColor`, `appearance`, `archetype`, `archetype
 `appearance` controla el avatar ilustrado (`skinTone`, `hairColor`,
 `hairStyle`: `"ponytail" | "short" | "bun" | "balding"`). `archetype`/`archetypeStat` son el
 sello y estadística que se muestran en la tarjeta de selección de expediente.
+
+`voiceProfile.elevenLabsVoiceId` es el Voice ID de ElevenLabs para ese personaje (ver
+[Voice Library](https://elevenlabs.io/app/voice-library)). Si está vacío, la voz cae de
+vuelta a la Web Speech API del navegador usando `pitch`/`rate` como antes — no rompe nada
+dejarlo así mientras se eligen las voces.
