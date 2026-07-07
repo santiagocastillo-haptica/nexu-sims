@@ -1,19 +1,20 @@
-# Agentes Sims — Plataforma de agentes IA (fintech)
+# Nexu Sims — Plataforma de agentes IA (clientes Nexu)
 
-Simulación 2D estilo "The Sims" con 4 personajes (agentes IA vía Claude) que representan
-usuarios de una fintech mexicana. Chat 1 a 1 con streaming y voz, más conversaciones
-ambientales entre agentes cuando comparten zona.
+Plataforma estilo videojuego (inspirada en Ace Attorney) para hablar 1 a 1 con agentes IA
+(vía Claude) que representan arquetipos de comportamiento de clientes de Nexu, una fintech
+de financiamiento de autos. Elige un "expediente" en la pantalla principal y entra a la
+sala de investigación a interrogar al personaje, con chat en streaming, voz y micrófono.
 
-Los 4 personajes de `backend/src/agents/agentConfigs.json` son **placeholder** — se
-reemplazarán con datos de entrevistas reales en una siguiente fase (ver
-[backend/src/agents/README.md](backend/src/agents/README.md)).
+El agente 1 (**Pasajero Turista**) ya está poblado con un perfil de comportamiento real y
+datos de una entrevista real (con identidad anonimizada porque este repo es público). Los
+otros 3 siguen siendo placeholder — ver
+[backend/src/agents/README.md](backend/src/agents/README.md).
 
 ## Estructura
 
-- `backend/` — Node.js + Express + `@anthropic-ai/sdk`. Streaming de chat vía SSE,
-  interacción agente-agente vía tool use forzado.
-- `frontend/` — React + Vite + Zustand. Escenario 2D, avatares animados, chat con voz
-  (Web Speech API).
+- `backend/` — Node.js + Express + `@anthropic-ai/sdk`. Streaming de chat vía SSE.
+- `frontend/` — React + Vite + Zustand. Pantalla de selección de expediente, sala de
+  investigación con diálogo tipo máquina de escribir, voz (Web Speech API).
 
 ## Setup local
 
@@ -30,5 +31,8 @@ npm install
 npm run dev             # http://localhost:5173
 ```
 
-Abre `http://localhost:5173`, haz click en un personaje para chatear. Los personajes
-también conversan entre sí de forma ambiental cuando comparten zona en el escenario.
+Abre `http://localhost:5173`, elige un expediente y empieza a chatear.
+
+## Deployment en vivo
+
+Ver [DEPLOY.md](DEPLOY.md) para desplegar backend + frontend en Render.
