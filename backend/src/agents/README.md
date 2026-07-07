@@ -5,13 +5,15 @@ de comportamiento de clientes de Nexu (matriz de conciencia financiera × conoci
 servicio/autonomía en la gestión del crédito): Pasajero Turista, Conductor Wazer, Copiloto
 Apoyo y Conductor Todoterreno.
 
-- **agente_1 (Pasajero Turista / "Ricardo Torres Medina", alias)** ya está poblado con
+- **agente_1 (Pasajero Turista / "Alejandro Martínez", alias)** ya está poblado con
   datos reales: el perfil de comportamiento del documento de perfilación de Nexu + la
   transcripción de una entrevista real, con nombre, ciudad exacta y lugar de trabajo
   anonimizados porque este repositorio es público — no usar el nombre real del
   entrevistado en este archivo. No tiene `_replaceWithInterviewData`.
-- **agente_2, agente_3, agente_4** siguen siendo placeholder (`_replaceWithInterviewData: true`)
-  para los otros 3 arquetipos. Al cargar sus entrevistas reales, reemplazar por cada uno:
+- **agente_2 (Conductor Wazer / "Roberto López"), agente_3 (Copiloto Apoyo / "Bárbara
+  Solano"), agente_4 (Conductor Todoterreno / "Karla Fuentes")** siguen siendo placeholder
+  (`_replaceWithInterviewData: true`) — solo tienen nombre asignado, no entrevista real
+  todavía. Al cargar sus entrevistas reales, reemplazar por cada uno:
   - `name` — nombre del entrevistado (o alias).
   - `personalitySummary` — resumen breve de su perfil real para la tarjeta de "expediente".
   - `systemPrompt` — el prompt de sistema completo construido a partir del arquetipo +
