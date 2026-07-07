@@ -38,8 +38,9 @@ app.get('/api/health', (req, res) => {
 });
 
 app.get('/api/agents', (req, res) => {
-  const publicAgents = agentConfigs.map(
-    ({ id, name, avatarColor, appearance, voiceProfile, personalitySummary, archetype, archetypeStat }) => ({
+  const publicAgents = agentConfigs
+    .filter((agent) => agent.active !== false)
+    .map(({ id, name, avatarColor, appearance, voiceProfile, personalitySummary, archetype, archetypeStat }) => ({
       id,
       name,
       avatarColor,
@@ -48,8 +49,7 @@ app.get('/api/agents', (req, res) => {
       personalitySummary,
       archetype,
       archetypeStat,
-    })
-  );
+    }));
   res.json(publicAgents);
 });
 

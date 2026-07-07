@@ -4,7 +4,7 @@ const agentsById = new Map(agentConfigs.map((agent) => [agent.id, agent]));
 
 function getAgent(agentId) {
   const agent = agentsById.get(agentId);
-  if (!agent) {
+  if (!agent || agent.active === false) {
     throw new Error(`Agente desconocido: ${agentId}`);
   }
   return agent;

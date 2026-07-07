@@ -31,3 +31,11 @@ sello y estadística que se muestran en la tarjeta de selección de expediente.
 [Voice Library](https://elevenlabs.io/app/voice-library)). Si está vacío, la voz cae de
 vuelta a la Web Speech API del navegador usando `pitch`/`rate` como antes — no rompe nada
 dejarlo así mientras se eligen las voces.
+
+## Activar/desactivar un personaje
+
+Agrega `"active": false` al agente para ocultarlo de `/api/agents` (no aparece en la
+pantalla de selección) y bloquear `/api/chat` para su `id` (responde 404). No borra nada
+de su configuración — para reactivarlo, quita el campo o ponlo en `true`. Ahora mismo
+`agente_2` (Roberto López) y `agente_3` (Bárbara Solano) están desactivados; se reactivan
+cuando se decida mostrarlos.

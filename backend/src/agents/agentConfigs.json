@@ -13,6 +13,7 @@
   {
     "id": "agente_2",
     "name": "Roberto López",
+    "active": false,
     "archetype": "Conductor Wazer",
     "archetypeStat": "Alto conocimiento · Bajo servicio",
     "avatarColor": "#3f7fbf",
@@ -25,6 +26,7 @@
   {
     "id": "agente_3",
     "name": "Bárbara Solano",
+    "active": false,
     "archetype": "Copiloto Apoyo",
     "archetypeStat": "Bajo conocimiento · Alto servicio",
     "avatarColor": "#4caf7d",
