@@ -3,7 +3,6 @@ const express = require('express');
 const cors = require('cors');
 
 const chatRouter = require('./routes/chat');
-const agentInteractionRouter = require('./routes/agentInteraction');
 const { agentConfigs } = require('./agents');
 
 const app = express();
@@ -36,20 +35,21 @@ app.get('/api/health', (req, res) => {
 
 app.get('/api/agents', (req, res) => {
   const publicAgents = agentConfigs.map(
-    ({ id, name, avatarColor, appearance, voiceProfile, personalitySummary }) => ({
+    ({ id, name, avatarColor, appearance, voiceProfile, personalitySummary, archetype, archetypeStat }) => ({
       id,
       name,
       avatarColor,
       appearance,
       voiceProfile,
       personalitySummary,
+      archetype,
+      archetypeStat,
     })
   );
   res.json(publicAgents);
 });
 
 app.use('/api/chat', chatRouter);
-app.use('/api/agent-interaction', agentInteractionRouter);
 
 app.listen(PORT, () => {
   console.log(`Backend de agentes-sims escuchando en http://localhost:${PORT}`);

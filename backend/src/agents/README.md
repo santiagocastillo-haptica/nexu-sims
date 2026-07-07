@@ -1,16 +1,26 @@
-# Configuración de agentes — placeholder
+# Configuración de agentes
 
-`agentConfigs.json` contiene 4 personajes ficticios para esta fase de la plataforma.
+`agentConfigs.json` contiene los 4 personajes de la plataforma, basados en la perfilación
+de comportamiento de clientes de Nexu (matriz de conciencia financiera × conocimiento del
+servicio/autonomía en la gestión del crédito): Pasajero Turista, Conductor Wazer, Copiloto
+Apoyo y Conductor Todoterreno.
 
-En la siguiente fase, al cargar las entrevistas reales, reemplazar por cada agente:
+- **agente_1 (Pasajero Turista / "Ricardo Torres Medina", alias)** ya está poblado con
+  datos reales: el perfil de comportamiento del documento de perfilación de Nexu + la
+  transcripción de una entrevista real, con nombre, ciudad exacta y lugar de trabajo
+  anonimizados porque este repositorio es público — no usar el nombre real del
+  entrevistado en este archivo. No tiene `_replaceWithInterviewData`.
+- **agente_2, agente_3, agente_4** siguen siendo placeholder (`_replaceWithInterviewData: true`)
+  para los otros 3 arquetipos. Al cargar sus entrevistas reales, reemplazar por cada uno:
+  - `name` — nombre del entrevistado (o alias).
+  - `personalitySummary` — resumen breve de su perfil real para la tarjeta de "expediente".
+  - `systemPrompt` — el prompt de sistema completo construido a partir del arquetipo +
+    la entrevista (contexto, forma de hablar, preocupaciones, relación con Nexu, citas
+    textuales relevantes, etc.), siguiendo el mismo patrón que `agente_1`.
+  - `_replaceWithInterviewData` — quitar este campo una vez reemplazado el agente.
 
-- `name` — nombre del entrevistado (o alias).
-- `personalitySummary` — resumen breve de su perfil real.
-- `systemPrompt` — el prompt de sistema completo construido a partir de la entrevista
-  (contexto, forma de hablar, preocupaciones, relación con la fintech, citas textuales
-  relevantes, etc.).
-- `_replaceWithInterviewData` — quitar este campo una vez reemplazado el agente.
-
-No es necesario tocar `id`, `avatarColor`, `appearance` ni `voiceProfile` a menos que se
-quiera ajustar la identidad visual/sonora de cada personaje. `appearance` controla el
-avatar ilustrado (`skinTone`, `hairColor`, `hairStyle`: `"ponytail" | "short" | "bun" | "balding"`).
+No es necesario tocar `id`, `avatarColor`, `appearance`, `archetype`, `archetypeStat` ni
+`voiceProfile` a menos que se quiera ajustar la identidad visual/sonora de cada personaje.
+`appearance` controla el avatar ilustrado (`skinTone`, `hairColor`,
+`hairStyle`: `"ponytail" | "short" | "bun" | "balding"`). `archetype`/`archetypeStat` son el
+sello y estadística que se muestran en la tarjeta de selección de expediente.

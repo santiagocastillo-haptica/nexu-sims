@@ -38,7 +38,7 @@ router.post('/', async (req, res) => {
   try {
     const stream = client.messages.stream({
       model: MODEL,
-      max_tokens: 512,
+      max_tokens: 1024,
       system: agent.systemPrompt,
       messages,
     });

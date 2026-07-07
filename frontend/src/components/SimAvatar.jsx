@@ -30,28 +30,20 @@ function Hair({ style, color }) {
   }
 }
 
-export default function SimAvatar({ bodyColor, skinTone, hairColor, hairStyle, walking }) {
+export default function SimAvatar({ bodyColor, skinTone, hairColor, hairStyle, talking }) {
   return (
     <svg
-      className={`sim-avatar${walking ? ' sim-avatar--walking' : ''}`}
+      className={`sim-avatar${talking ? ' sim-avatar--talking' : ''}`}
       viewBox="0 0 64 96"
       xmlns="http://www.w3.org/2000/svg"
     >
       <ellipse cx="32" cy="93" rx="16" ry="4" fill="rgba(0,0,0,0.3)" />
 
-      <g className="sim-leg sim-leg--left">
-        <rect x="20" y="64" width="9" height="27" rx="4" fill={PANTS_COLOR} />
-      </g>
-      <g className="sim-leg sim-leg--right">
-        <rect x="35" y="64" width="9" height="27" rx="4" fill={PANTS_COLOR} />
-      </g>
+      <rect x="20" y="64" width="9" height="27" rx="4" fill={PANTS_COLOR} />
+      <rect x="35" y="64" width="9" height="27" rx="4" fill={PANTS_COLOR} />
 
-      <g className="sim-arm sim-arm--left">
-        <rect x="6" y="36" width="9" height="27" rx="4.5" fill={bodyColor} />
-      </g>
-      <g className="sim-arm sim-arm--right">
-        <rect x="49" y="36" width="9" height="27" rx="4.5" fill={bodyColor} />
-      </g>
+      <rect x="6" y="36" width="9" height="27" rx="4.5" fill={bodyColor} />
+      <rect x="49" y="36" width="9" height="27" rx="4.5" fill={bodyColor} />
 
       <rect x="16" y="33" width="32" height="34" rx="11" fill={bodyColor} />
 
