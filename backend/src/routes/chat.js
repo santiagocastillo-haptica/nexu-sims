@@ -2,6 +2,7 @@ const express = require('express');
 const { client, MODEL } = require('../anthropicClient');
 const { getAgent } = require('../agents');
 const { RESPONSE_PROTOCOL } = require('../agents/responseProtocol');
+const { JOURNEY_CONTEXT } = require('../agents/journeyContext');
 
 const router = express.Router();
 
@@ -37,10 +38,14 @@ router.post('/', async (req, res) => {
   };
 
   try {
+    const systemSections = [agent.systemPrompt, agent.surveySynthesis, JOURNEY_CONTEXT, RESPONSE_PROTOCOL].filter(
+      Boolean
+    );
+
     const stream = client.messages.stream({
       model: MODEL,
       max_tokens: 2048,
-      system: `${agent.systemPrompt}\n\n${RESPONSE_PROTOCOL}`,
+      system: systemSections.join('\n\n'),
       messages,
     });
 

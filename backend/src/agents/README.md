@@ -32,14 +32,26 @@ sello y estadística que se muestran en la tarjeta de selección de expediente.
 vuelta a la Web Speech API del navegador usando `pitch`/`rate` como antes — no rompe nada
 dejarlo así mientras se eligen las voces.
 
-## Protocolo de respuesta compartido
+## Capas del system prompt
 
-`responseProtocol.js` exporta `RESPONSE_PROTOCOL`, un bloque de instrucciones de
-comportamiento (voz de cliente, no inventar información, estructura de
-reacción/percepción/cierre al validar una propuesta, etc.) que `routes/chat.js` concatena
-al final del `systemPrompt` de **cualquier** agente en cada llamada. No hace falta
-repetirlo en `agentConfigs.json` — un solo lugar para ajustar el protocolo para los 4
-personajes a la vez.
+`routes/chat.js` arma el `system` de cada llamada concatenando, en orden:
+
+1. `agent.systemPrompt` — identidad y hechos concretos del personaje (agentConfigs.json).
+2. `agent.surveySynthesis` (opcional) — patrones agregados de encuestas del segmento de
+   ese arquetipo, si existen. Hoy solo `agente_1` lo tiene (278 respuestas de "Pasajero
+   Turista"), sintetizado siguiendo las reglas de interpretación del equipo (nunca cita
+   respuestas individuales, solo tendencias). Para agregar el de otro arquetipo, sumar el
+   campo `surveySynthesis` a su entrada en `agentConfigs.json` con el mismo formato.
+3. `JOURNEY_CONTEXT` (`journeyContext.js`) — mapa compartido de las etapas del customer
+   journey de Nexu (antes/durante/después), para que el agente ubique en qué momento del
+   proceso está una situación y mantenga coherencia con su propia historia. Es contexto de
+   referencia, no algo para recitar tal cual.
+4. `RESPONSE_PROTOCOL` (`responseProtocol.js`) — instrucciones de comportamiento
+   compartidas (voz de cliente, no inventar información, estructura de
+   reacción/percepción/cierre al validar una propuesta, etc.).
+
+Las capas 3 y 4 son compartidas por los 4 agentes — se editan una sola vez y aplican a
+todos. La capa 2 es específica de cada arquetipo cuando exista esa data.
 
 ## Activar/desactivar un personaje
 
