@@ -33,6 +33,24 @@ npm run dev             # http://localhost:5173
 
 Abre `http://localhost:5173`, elige un expediente y empieza a chatear.
 
+## Registro de conversaciones (Firestore)
+
+Si configuras `FIREBASE_SERVICE_ACCOUNT_BASE64` en el backend, cada pregunta y respuesta
+se guarda en la colección `conversations` de Firestore (agentId, agentName, archetype,
+message, response, createdAt). Si la variable no está configurada, el chat funciona igual
+pero no se guarda nada — no es obligatoria.
+
+Para configurarla:
+1. En la consola de Firebase → ⚙️ Configuración del proyecto → **Cuentas de servicio** →
+   **Generar nueva clave privada**. Se descarga un `.json` con credenciales de administrador
+   — trátalo como un secreto, nunca lo subas al repo.
+2. Codifícalo en base64 en una sola línea:
+   - Windows (PowerShell): `[Convert]::ToBase64String([IO.File]::ReadAllBytes("ruta\a\tu-archivo.json")) | Set-Clipboard`
+     (queda copiado en el portapapeles)
+   - macOS/Linux: `base64 -i tu-archivo.json | pbcopy` (o redirige a un archivo)
+3. Pega ese texto como el valor de `FIREBASE_SERVICE_ACCOUNT_BASE64` en tu `.env` local y/o
+   en las variables de entorno del backend en Render.
+
 ## Deployment en vivo
 
 Ver [DEPLOY.md](DEPLOY.md) para desplegar backend + frontend en Render.

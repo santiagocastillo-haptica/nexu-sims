@@ -3,6 +3,7 @@ const { client, MODEL } = require('../anthropicClient');
 const { getAgent } = require('../agents');
 const { RESPONSE_PROTOCOL } = require('../agents/responseProtocol');
 const { JOURNEY_CONTEXT } = require('../agents/journeyContext');
+const { logConversationTurn } = require('../firestore');
 
 const router = express.Router();
 
@@ -61,6 +62,8 @@ router.post('/', async (req, res) => {
 
     send('done', { text: fullText });
     res.end();
+
+    logConversationTurn({ agent, message, response: fullText });
   } catch (err) {
     console.error('Error en /api/chat:', err);
     send('error', { message: 'Ocurrió un error generando la respuesta.' });
