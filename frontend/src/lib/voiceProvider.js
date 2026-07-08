@@ -17,16 +17,39 @@ export function buildTtsUrl(text, voiceId) {
   return `${API_URL}/api/tts?${params.toString()}`;
 }
 
-/** Reproduce una URL de audio. Resuelve en `true` si terminó bien, `false` si falló (para que el caller pueda caer a speakWebSpeech). */
-export function playAudioUrl(url) {
+/**
+ * Crea un <audio> y arranca su descarga/generación de inmediato, sin reproducirlo
+ * todavía. Se usa para adelantar la síntesis de una oración mientras la anterior
+ * sigue sonando, y así evitar el silencio entre oraciones/párrafos que causa esperar
+ * a que le toque su turno para recién empezar a pedirle el audio a ElevenLabs.
+ */
+export function prepareAudio(url) {
+  if (!url) return null;
+  const audio = new Audio();
+  audio.preload = 'auto';
+  audio.src = url;
+  return audio;
+}
+
+/** Reproduce un <audio> ya preparado con prepareAudio() (o una URL, si no se precargó). Resuelve en `true` si terminó bien, `false` si falló (para que el caller pueda caer a speakWebSpeech). */
+export function playPreparedAudio(audioOrUrl) {
   return new Promise((resolve) => {
     stopSpeaking();
-    const audio = new Audio(url);
+    const audio = typeof audioOrUrl === 'string' ? prepareAudio(audioOrUrl) : audioOrUrl;
+    if (!audio) {
+      resolve(false);
+      return;
+    }
     currentAudio = audio;
     audio.addEventListener('ended', () => resolve(true));
     audio.addEventListener('error', () => resolve(false));
     audio.play().catch(() => resolve(false));
   });
+}
+
+/** Reproduce una URL de audio directamente (sin precarga previa). Resuelve en `true` si terminó bien, `false` si falló. */
+export function playAudioUrl(url) {
+  return playPreparedAudio(url);
 }
 
 export function speakWebSpeech(text, voiceProfile = {}) {

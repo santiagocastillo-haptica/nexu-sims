@@ -4,7 +4,8 @@ import { streamChat } from '../lib/api';
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
 import {
   buildTtsUrl,
-  playAudioUrl,
+  prepareAudio,
+  playPreparedAudio,
   speakWebSpeech,
   playSequence,
   splitReadySentences,
@@ -83,10 +84,13 @@ export default function InvestigationRoom() {
       if (!text) return;
       const url = buildTtsUrl(text, voiceProfile.elevenLabsVoiceId);
       useSimStore.getState().appendMessageAudioSegment(agent.id, messageIndex, { text, url });
+      // Precarga el audio ya mismo (no espera su turno en la cola) para que esté listo
+      // en cuanto termine de sonar la oración anterior, sin silencio de por medio.
+      const preparedAudio = url ? prepareAudio(url) : null;
       audioQueue = audioQueue.then(async () => {
         if (cancelledRef.current) return;
         useSimStore.getState().setAgentStatus(agent.id, 'hablando');
-        const ok = url ? await playAudioUrl(url) : false;
+        const ok = preparedAudio ? await playPreparedAudio(preparedAudio) : false;
         if (cancelledRef.current) return;
         if (!ok) {
           setVoiceFallback(true);
