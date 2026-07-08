@@ -24,6 +24,12 @@ function Hair({ style, color }) {
         <>
           <path d="M17 17 Q32 3 47 17 L47 23 Q32 12 17 23 Z" fill={color} />
           <circle cx="32" cy="6" r="5.5" fill={color} />
+          {/* flor decorativa */}
+          <circle cx="21" cy="10" r="2.2" fill="#e97fb0" />
+          <circle cx="24" cy="7.5" r="2.2" fill="#e97fb0" />
+          <circle cx="24.5" cy="12.5" r="2.2" fill="#e97fb0" />
+          <circle cx="27.5" cy="9.5" r="2.2" fill="#e97fb0" />
+          <circle cx="24.3" cy="10" r="1.5" fill="#f5c84c" />
         </>
       );
     case 'balding':

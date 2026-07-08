@@ -32,6 +32,15 @@ sello y estadística que se muestran en la tarjeta de selección de expediente.
 vuelta a la Web Speech API del navegador usando `pitch`/`rate` como antes — no rompe nada
 dejarlo así mientras se eligen las voces.
 
+## Protocolo de respuesta compartido
+
+`responseProtocol.js` exporta `RESPONSE_PROTOCOL`, un bloque de instrucciones de
+comportamiento (voz de cliente, no inventar información, estructura de
+reacción/percepción/cierre al validar una propuesta, etc.) que `routes/chat.js` concatena
+al final del `systemPrompt` de **cualquier** agente en cada llamada. No hace falta
+repetirlo en `agentConfigs.json` — un solo lugar para ajustar el protocolo para los 4
+personajes a la vez.
+
 ## Activar/desactivar un personaje
 
 Agrega `"active": false` al agente para ocultarlo de `/api/agents` (no aparece en la
