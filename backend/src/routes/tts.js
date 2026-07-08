@@ -48,7 +48,8 @@ router.get('/', async (req, res) => {
 
     if (!elevenRes.ok || !elevenRes.body) {
       console.error('Error de ElevenLabs:', elevenRes.status, errText);
-      return res.status(502).json({ error: 'No se pudo generar el audio.' });
+      // TEMPORAL: exponer el detalle del error para diagnosticar el 502 en producción.
+      return res.status(502).json({ error: 'No se pudo generar el audio.', debugStatus: elevenRes.status, debugDetail: errText });
     }
 
     res.setHeader('Content-Type', 'audio/mpeg');
