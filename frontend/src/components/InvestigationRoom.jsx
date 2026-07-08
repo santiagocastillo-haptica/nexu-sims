@@ -2,23 +2,17 @@ import { useEffect, useRef, useState } from 'react';
 import { useSimStore } from '../state/useSimStore';
 import { streamChat } from '../lib/api';
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
-import { buildTtsUrl, playAudioUrl, speakWebSpeech, playSequence, stopSpeaking } from '../lib/voiceProvider';
+import {
+  buildTtsUrl,
+  playAudioUrl,
+  speakWebSpeech,
+  playSequence,
+  splitReadySentences,
+  stopSpeaking,
+} from '../lib/voiceProvider';
 import SimAvatar from './SimAvatar';
 
 const DEFAULT_APPEARANCE = { skinTone: '#e7b48c', hairColor: '#3b2a1e', hairStyle: 'short' };
-
-async function playAgentReply(agentId, messageIndex, text, voiceProfile) {
-  const store = useSimStore.getState();
-  store.setAgentStatus(agentId, 'hablando');
-
-  const url = buildTtsUrl(text, voiceProfile.elevenLabsVoiceId);
-  if (url) store.setMessageAudio(agentId, messageIndex, url);
-
-  const ok = url ? await playAudioUrl(url) : false;
-  if (!ok) await speakWebSpeech(text, voiceProfile);
-
-  store.setAgentStatus(agentId, 'disponible');
-}
 
 export default function InvestigationRoom() {
   const activeChatAgentId = useSimStore((state) => state.activeChatAgentId);
@@ -31,6 +25,7 @@ export default function InvestigationRoom() {
   const [isSending, setIsSending] = useState(false);
   const transcriptEndRef = useRef(null);
   const abortControllerRef = useRef(null);
+  const cancelledRef = useRef(false);
 
   const { isSupported: micSupported, isListening, transcript, startListening, stopListening } =
     useSpeechRecognition();
@@ -71,20 +66,48 @@ export default function InvestigationRoom() {
 
     const controller = new AbortController();
     abortControllerRef.current = controller;
+    cancelledRef.current = false;
+
+    const messageIndex = useSimStore.getState().agents[agent.id].chatHistory.length - 1;
+    const voiceProfile = agent.voiceProfile;
+
+    // Reproduce el audio oración por oración conforme va llegando el texto, en vez de
+    // esperar la respuesta completa — así el audio arranca mucho antes.
+    let sentenceBuffer = '';
+    let audioQueue = Promise.resolve();
+
+    const queueSentence = (rawText) => {
+      const text = rawText.trim();
+      if (!text) return;
+      const url = buildTtsUrl(text, voiceProfile.elevenLabsVoiceId);
+      useSimStore.getState().appendMessageAudioSegment(agent.id, messageIndex, { text, url });
+      audioQueue = audioQueue.then(async () => {
+        if (cancelledRef.current) return;
+        useSimStore.getState().setAgentStatus(agent.id, 'hablando');
+        const ok = url ? await playAudioUrl(url) : false;
+        if (cancelledRef.current) return;
+        if (!ok) await speakWebSpeech(text, voiceProfile);
+      });
+    };
 
     await streamChat(
       { agentId: agent.id, message, conversationHistory: history },
       {
         signal: controller.signal,
         onDelta: (delta) => {
-          useSimStore.getState().setAgentStatus(agent.id, 'pensando');
           useSimStore.getState().appendAgentDelta(agent.id, delta);
+          sentenceBuffer += delta;
+          const { sentences, remainder } = splitReadySentences(sentenceBuffer);
+          sentenceBuffer = remainder;
+          sentences.forEach(queueSentence);
         },
         onDone: (fullText) => {
           useSimStore.getState().finalizeAgentReply(agent.id, fullText);
           setIsSending(false);
-          const messageIndex = useSimStore.getState().agents[agent.id].chatHistory.length - 1;
-          playAgentReply(agent.id, messageIndex, fullText, agent.voiceProfile);
+          if (sentenceBuffer.trim()) queueSentence(sentenceBuffer);
+          audioQueue.then(() => {
+            if (!cancelledRef.current) useSimStore.getState().setAgentStatus(agent.id, 'disponible');
+          });
         },
         onError: (msg) => {
           useSimStore.getState().finalizeAgentReply(agent.id, `⚠️ ${msg}`);
@@ -96,6 +119,7 @@ export default function InvestigationRoom() {
   };
 
   const handleStop = () => {
+    cancelledRef.current = true;
     abortControllerRef.current?.abort();
     stopSpeaking();
     useSimStore.getState().setAgentStatus(agent.id, 'disponible');
@@ -117,25 +141,27 @@ export default function InvestigationRoom() {
     }
   };
 
+  const toPlaySequenceItems = (msg) =>
+    msg.audioSegments && msg.audioSegments.length > 0
+      ? msg.audioSegments.map((seg) => ({ content: seg.text, audioUrl: seg.url, voiceProfile: agent.voiceProfile }))
+      : [{ content: msg.content, audioUrl: null, voiceProfile: agent.voiceProfile }];
+
   const handleReplayLast = () => {
     const lastAssistant = [...agent.chatHistory].reverse().find((m) => m.role === 'assistant');
     if (!lastAssistant) return;
     useSimStore.getState().setAgentStatus(agent.id, 'hablando');
-    const finish = () => useSimStore.getState().setAgentStatus(agent.id, 'disponible');
-    if (lastAssistant.audioUrl) {
-      playAudioUrl(lastAssistant.audioUrl).then(finish);
-    } else {
-      speakWebSpeech(lastAssistant.content, agent.voiceProfile).then(finish);
-    }
+    playSequence(toPlaySequenceItems(lastAssistant)).then(() =>
+      useSimStore.getState().setAgentStatus(agent.id, 'disponible')
+    );
   };
 
   const handleReplayAll = () => {
     const assistantMessages = agent.chatHistory.filter((m) => m.role === 'assistant');
     if (assistantMessages.length === 0) return;
     useSimStore.getState().setAgentStatus(agent.id, 'hablando');
-    playSequence(
-      assistantMessages.map((m) => ({ content: m.content, audioUrl: m.audioUrl, voiceProfile: agent.voiceProfile }))
-    ).then(() => useSimStore.getState().setAgentStatus(agent.id, 'disponible'));
+    playSequence(assistantMessages.flatMap(toPlaySequenceItems)).then(() =>
+      useSimStore.getState().setAgentStatus(agent.id, 'disponible')
+    );
   };
 
   const handleDownload = () => {

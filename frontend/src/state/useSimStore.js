@@ -78,12 +78,13 @@ export const useSimStore = create((set) => ({
     });
   },
 
-  setMessageAudio: (agentId, index, audioUrl) => {
+  appendMessageAudioSegment: (agentId, index, segment) => {
     set((state) => {
       const agent = state.agents[agentId];
       if (!agent || !agent.chatHistory[index]) return state;
       const chatHistory = [...agent.chatHistory];
-      chatHistory[index] = { ...chatHistory[index], audioUrl };
+      const existing = chatHistory[index].audioSegments || [];
+      chatHistory[index] = { ...chatHistory[index], audioSegments: [...existing, segment] };
       return { agents: { ...state.agents, [agentId]: { ...agent, chatHistory } } };
     });
   },

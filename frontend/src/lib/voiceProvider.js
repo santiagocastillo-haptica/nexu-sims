@@ -62,6 +62,25 @@ export async function playSequence(items) {
   }
 }
 
+/**
+ * Extrae del buffer las oraciones ya "cerradas" (terminan en . ! ? seguido de espacio),
+ * dejando en `remainder` lo que sigue incompleto (todavía se está generando). Se usa para
+ * mandar cada oración a sintetizar voz en cuanto está lista, en vez de esperar la
+ * respuesta completa — así el audio empieza a sonar mucho antes.
+ */
+export function splitReadySentences(buffer) {
+  const sentences = [];
+  let remainder = buffer;
+  const re = /[.!?]+(\s+)/;
+  let match;
+  while ((match = re.exec(remainder))) {
+    const cutEnd = match.index + match[0].length;
+    sentences.push(remainder.slice(0, cutEnd).trim());
+    remainder = remainder.slice(cutEnd);
+  }
+  return { sentences, remainder };
+}
+
 export function stopSpeaking() {
   if (currentAudio) {
     currentAudio.pause();
