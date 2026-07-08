@@ -23,6 +23,7 @@ export default function InvestigationRoom() {
 
   const [input, setInput] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [voiceFallback, setVoiceFallback] = useState(false);
   const transcriptEndRef = useRef(null);
   const abortControllerRef = useRef(null);
   const cancelledRef = useRef(false);
@@ -67,6 +68,7 @@ export default function InvestigationRoom() {
     const controller = new AbortController();
     abortControllerRef.current = controller;
     cancelledRef.current = false;
+    setVoiceFallback(false);
 
     const messageIndex = useSimStore.getState().agents[agent.id].chatHistory.length - 1;
     const voiceProfile = agent.voiceProfile;
@@ -86,7 +88,10 @@ export default function InvestigationRoom() {
         useSimStore.getState().setAgentStatus(agent.id, 'hablando');
         const ok = url ? await playAudioUrl(url) : false;
         if (cancelledRef.current) return;
-        if (!ok) await speakWebSpeech(text, voiceProfile);
+        if (!ok) {
+          setVoiceFallback(true);
+          await speakWebSpeech(text, voiceProfile);
+        }
       });
     };
 
@@ -208,6 +213,11 @@ export default function InvestigationRoom() {
           {agent.status === 'pensando' && (
             <div className="avatar-panel__speaking-badge avatar-panel__speaking-badge--thinking">
               <span>Pensando...</span>
+            </div>
+          )}
+          {voiceFallback && (
+            <div className="avatar-panel__voice-warning">
+              ⚠️ Voz de respaldo del navegador (se agotó el crédito de ElevenLabs)
             </div>
           )}
 

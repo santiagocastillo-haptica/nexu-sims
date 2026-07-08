@@ -247,6 +247,18 @@
   background: #e0b93f;
 }
 
+.avatar-panel__voice-warning {
+  display: block;
+  background: #fdecea;
+  color: #a13a2f;
+  border: 1px solid #f2b8b0;
+  font-size: 11.5px;
+  line-height: 1.4;
+  padding: 8px 10px;
+  border-radius: 8px;
+  margin-bottom: 14px;
+}
+
 .avatar-panel__bar {
   width: 3px;
   background: #fff;
