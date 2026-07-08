@@ -5,11 +5,12 @@ import { API_URL } from './api';
  * al backend (que llama a ElevenLabs con la key server-side y transmite el audio en
  * streaming). Al ser una URL normal, `new Audio(url)` la reproduce progresivamente sin
  * esperar el archivo completo, y el navegador la cachea (repetir no vuelve a pegarle a
- * ElevenLabs). Si no hay voiceId, el caller debe usar speakWebSpeech() como respaldo.
+ * ElevenLabs). Si el audio falla (ej. se agota el crédito de ElevenLabs) NO hay respaldo
+ * de voz del navegador — el caller debe avisar que la conversación sigue solo en modo
+ * texto (ver `voiceFallback` en InvestigationRoom.jsx).
  */
 
 let currentAudio = null;
-let currentUtterance = null;
 
 export function buildTtsUrl(text, voiceId) {
   if (!text || !voiceId) return null;
@@ -31,7 +32,7 @@ export function prepareAudio(url) {
   return audio;
 }
 
-/** Reproduce un <audio> ya preparado con prepareAudio() (o una URL, si no se precargó). Resuelve en `true` si terminó bien, `false` si falló (para que el caller pueda caer a speakWebSpeech). */
+/** Reproduce un <audio> ya preparado con prepareAudio() (o una URL, si no se precargó). Resuelve en `true` si terminó bien, `false` si falló. */
 export function playPreparedAudio(audioOrUrl) {
   return new Promise((resolve) => {
     stopSpeaking();
@@ -52,37 +53,16 @@ export function playAudioUrl(url) {
   return playPreparedAudio(url);
 }
 
-export function speakWebSpeech(text, voiceProfile = {}) {
-  return new Promise((resolve) => {
-    if (!text || !('speechSynthesis' in window)) {
-      resolve();
-      return;
-    }
-    stopSpeaking();
-
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'es-MX';
-    utterance.pitch = voiceProfile.pitch ?? 1;
-    utterance.rate = voiceProfile.rate ?? 1;
-
-    const voices = window.speechSynthesis.getVoices();
-    const spanishVoice = voices.find((v) => v.lang?.startsWith('es'));
-    if (spanishVoice) utterance.voice = spanishVoice;
-
-    utterance.onend = resolve;
-    utterance.onerror = resolve;
-
-    currentUtterance = utterance;
-    window.speechSynthesis.speak(utterance);
-  });
-}
-
-/** Reproduce una lista de { content, audioUrl, voiceProfile } en orden, esperando a que cada uno termine. */
+/** Reproduce una lista de { content, audioUrl } en orden. Devuelve `true` si todos
+ * los audios sonaron bien, `false` si alguno falló (para avisar que la conversación
+ * sigue solo en modo texto). */
 export async function playSequence(items) {
+  let allOk = true;
   for (const item of items) {
     const ok = item.audioUrl ? await playAudioUrl(item.audioUrl) : false;
-    if (!ok) await speakWebSpeech(item.content, item.voiceProfile);
+    if (!ok) allOk = false;
   }
+  return allOk;
 }
 
 /**
@@ -109,8 +89,4 @@ export function stopSpeaking() {
     currentAudio.pause();
     currentAudio = null;
   }
-  if ('speechSynthesis' in window) {
-    window.speechSynthesis.cancel();
-  }
-  currentUtterance = null;
 }

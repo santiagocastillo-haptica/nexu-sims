@@ -6,7 +6,6 @@ import {
   buildTtsUrl,
   prepareAudio,
   playPreparedAudio,
-  speakWebSpeech,
   playSequence,
   splitReadySentences,
   stopSpeaking,
@@ -78,23 +77,27 @@ export default function InvestigationRoom() {
     // esperar la respuesta completa — así el audio arranca mucho antes.
     let sentenceBuffer = '';
     let audioQueue = Promise.resolve();
+    let voiceUnavailable = false;
 
     const queueSentence = (rawText) => {
       const text = rawText.trim();
       if (!text) return;
       const url = buildTtsUrl(text, voiceProfile.elevenLabsVoiceId);
       useSimStore.getState().appendMessageAudioSegment(agent.id, messageIndex, { text, url });
+      if (voiceUnavailable) return;
       // Precarga el audio ya mismo (no espera su turno en la cola) para que esté listo
       // en cuanto termine de sonar la oración anterior, sin silencio de por medio.
       const preparedAudio = url ? prepareAudio(url) : null;
       audioQueue = audioQueue.then(async () => {
-        if (cancelledRef.current) return;
+        if (cancelledRef.current || voiceUnavailable) return;
         useSimStore.getState().setAgentStatus(agent.id, 'hablando');
         const ok = preparedAudio ? await playPreparedAudio(preparedAudio) : false;
         if (cancelledRef.current) return;
         if (!ok) {
+          // No hay respaldo de voz del navegador: si falla ElevenLabs (ej. se agotó el
+          // crédito), la conversación sigue solo en modo texto en vez de sonar distinto.
+          voiceUnavailable = true;
           setVoiceFallback(true);
-          await speakWebSpeech(text, voiceProfile);
         }
       });
     };
@@ -158,19 +161,23 @@ export default function InvestigationRoom() {
   const handleReplayLast = () => {
     const lastAssistant = [...agent.chatHistory].reverse().find((m) => m.role === 'assistant');
     if (!lastAssistant) return;
+    setVoiceFallback(false);
     useSimStore.getState().setAgentStatus(agent.id, 'hablando');
-    playSequence(toPlaySequenceItems(lastAssistant)).then(() =>
-      useSimStore.getState().setAgentStatus(agent.id, 'disponible')
-    );
+    playSequence(toPlaySequenceItems(lastAssistant)).then((ok) => {
+      if (!ok) setVoiceFallback(true);
+      useSimStore.getState().setAgentStatus(agent.id, 'disponible');
+    });
   };
 
   const handleReplayAll = () => {
     const assistantMessages = agent.chatHistory.filter((m) => m.role === 'assistant');
     if (assistantMessages.length === 0) return;
+    setVoiceFallback(false);
     useSimStore.getState().setAgentStatus(agent.id, 'hablando');
-    playSequence(assistantMessages.flatMap(toPlaySequenceItems)).then(() =>
-      useSimStore.getState().setAgentStatus(agent.id, 'disponible')
-    );
+    playSequence(assistantMessages.flatMap(toPlaySequenceItems)).then((ok) => {
+      if (!ok) setVoiceFallback(true);
+      useSimStore.getState().setAgentStatus(agent.id, 'disponible');
+    });
   };
 
   const handleDownload = () => {
@@ -221,7 +228,7 @@ export default function InvestigationRoom() {
           )}
           {voiceFallback && (
             <div className="avatar-panel__voice-warning">
-              ⚠️ Voz de respaldo del navegador (se agotó el crédito de ElevenLabs)
+              Conversación por voz no disponible. ¡Escríbeme!
             </div>
           )}
 
