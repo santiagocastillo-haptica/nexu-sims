@@ -77,4 +77,14 @@ export const useSimStore = create((set) => ({
       return { agents: { ...state.agents, [agentId]: { ...agent, chatHistory } } };
     });
   },
+
+  setMessageAudio: (agentId, index, audioUrl) => {
+    set((state) => {
+      const agent = state.agents[agentId];
+      if (!agent || !agent.chatHistory[index]) return state;
+      const chatHistory = [...agent.chatHistory];
+      chatHistory[index] = { ...chatHistory[index], audioUrl };
+      return { agents: { ...state.agents, [agentId]: { ...agent, chatHistory } } };
+    });
+  },
 }));

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import './App.css';
+import Header from './components/Header';
 import CaseSelect from './components/CaseSelect';
 import InvestigationRoom from './components/InvestigationRoom';
 import { useSimStore } from './state/useSimStore';
@@ -20,6 +21,7 @@ function App() {
   if (loadError) {
     return (
       <div className="app app--error">
+        <Header />
         <div className="app__error">
           No se pudo conectar con el backend ({loadError}). Verifica que esté corriendo en el
           puerto configurado.
@@ -30,7 +32,12 @@ function App() {
 
   if (!loaded) return null;
 
-  return <div className="app">{screen === 'room' ? <InvestigationRoom /> : <CaseSelect />}</div>;
+  return (
+    <div className="app">
+      <Header />
+      {screen === 'room' ? <InvestigationRoom /> : <CaseSelect />}
+    </div>
+  );
 }
 
 export default App;
