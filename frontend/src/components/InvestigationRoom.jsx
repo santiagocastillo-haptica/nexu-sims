@@ -74,28 +74,44 @@ export default function InvestigationRoom() {
     const voiceProfile = agent.voiceProfile;
 
     // Reproduce el audio oración por oración conforme va llegando el texto, en vez de
-    // esperar la respuesta completa — así el audio arranca mucho antes.
+    // esperar la respuesta completa — así el audio arranca mucho antes. La precarga se
+    // limita a 1 oración por delante de la que está sonando (no todas de golpe): pedirle
+    // a ElevenLabs demasiadas oraciones al mismo tiempo excede el límite de peticiones
+    // concurrentes del plan y hace que falle con 429, aunque sobre crédito disponible.
     let sentenceBuffer = '';
     let audioQueue = Promise.resolve();
     let voiceUnavailable = false;
+    const sentenceQueue = [];
+    let prefetchedUpTo = -1;
+
+    const ensurePrefetched = (uptoIndex) => {
+      while (prefetchedUpTo < uptoIndex && prefetchedUpTo + 1 < sentenceQueue.length) {
+        prefetchedUpTo += 1;
+        const item = sentenceQueue[prefetchedUpTo];
+        item.audio = item.url ? prepareAudio(item.url) : null;
+      }
+    };
 
     const queueSentence = (rawText) => {
       const text = rawText.trim();
       if (!text) return;
       const url = buildTtsUrl(text, voiceProfile.elevenLabsVoiceId);
       useSimStore.getState().appendMessageAudioSegment(agent.id, messageIndex, { text, url });
+      const item = { url, audio: null };
+      const index = sentenceQueue.length;
+      sentenceQueue.push(item);
       if (voiceUnavailable) return;
-      // Precarga el audio ya mismo (no espera su turno en la cola) para que esté listo
-      // en cuanto termine de sonar la oración anterior, sin silencio de por medio.
-      const preparedAudio = url ? prepareAudio(url) : null;
+      ensurePrefetched(index); // precarga como máximo hasta 1 oración por delante
       audioQueue = audioQueue.then(async () => {
         if (cancelledRef.current || voiceUnavailable) return;
         useSimStore.getState().setAgentStatus(agent.id, 'hablando');
-        const ok = preparedAudio ? await playPreparedAudio(preparedAudio) : false;
+        ensurePrefetched(index + 1); // ya que le toca sonar, adelanta la siguiente
+        const ok = item.audio ? await playPreparedAudio(item.audio) : false;
         if (cancelledRef.current) return;
         if (!ok) {
-          // No hay respaldo de voz del navegador: si falla ElevenLabs (ej. se agotó el
-          // crédito), la conversación sigue solo en modo texto en vez de sonar distinto.
+          // No hay respaldo de voz del navegador: si falla ElevenLabs (ej. límite de
+          // peticiones concurrentes o crédito agotado), la conversación sigue solo en
+          // modo texto en vez de sonar distinto.
           voiceUnavailable = true;
           setVoiceFallback(true);
         }
