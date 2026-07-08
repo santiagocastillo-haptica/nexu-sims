@@ -24,7 +24,7 @@ Apoyo y Conductor Todoterreno.
 No es necesario tocar `id`, `avatarColor`, `appearance`, `archetype`, `archetypeStat` ni
 `voiceProfile` a menos que se quiera ajustar la identidad visual/sonora de cada personaje.
 `appearance` controla el avatar ilustrado (`skinTone`, `hairColor`,
-`hairStyle`: `"ponytail" | "short" | "bun" | "balding"`). `archetype`/`archetypeStat` son el
+`hairStyle`: `"ponytail" | "short" | "long" | "bun" | "balding"`). `archetype`/`archetypeStat` son el
 sello y estadística que se muestran en la tarjeta de selección de expediente.
 
 `voiceProfile.elevenLabsVoiceId` es el Voice ID de ElevenLabs para ese personaje (ver

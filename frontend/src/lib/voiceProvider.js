@@ -1,41 +1,31 @@
 import { API_URL } from './api';
 
 /**
- * Capa de abstracción de voz. Si el agente tiene `elevenLabsVoiceId`, pide el audio
- * al backend (que llama a ElevenLabs con la key server-side) y devuelve una URL de
- * blob reproducible/cacheable. Si no hay voiceId o la llamada falla, el caller debe
- * usar speakWebSpeech() como respaldo (voz del navegador, no cacheable pero gratis
- * de regenerar).
+ * Capa de abstracción de voz. Si el agente tiene `elevenLabsVoiceId`, arma una URL GET
+ * al backend (que llama a ElevenLabs con la key server-side y transmite el audio en
+ * streaming). Al ser una URL normal, `new Audio(url)` la reproduce progresivamente sin
+ * esperar el archivo completo, y el navegador la cachea (repetir no vuelve a pegarle a
+ * ElevenLabs). Si no hay voiceId, el caller debe usar speakWebSpeech() como respaldo.
  */
 
 let currentAudio = null;
 let currentUtterance = null;
 
-export async function synthesizeAudioUrl(text, voiceId) {
+export function buildTtsUrl(text, voiceId) {
   if (!text || !voiceId) return null;
-  try {
-    const res = await fetch(`${API_URL}/api/tts`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text, voiceId }),
-    });
-    if (!res.ok) throw new Error(`TTS respondió ${res.status}`);
-    const blob = await res.blob();
-    return URL.createObjectURL(blob);
-  } catch (err) {
-    console.warn('ElevenLabs TTS no disponible, usando voz del navegador:', err);
-    return null;
-  }
+  const params = new URLSearchParams({ text, voiceId });
+  return `${API_URL}/api/tts?${params.toString()}`;
 }
 
+/** Reproduce una URL de audio. Resuelve en `true` si terminó bien, `false` si falló (para que el caller pueda caer a speakWebSpeech). */
 export function playAudioUrl(url) {
   return new Promise((resolve) => {
     stopSpeaking();
     const audio = new Audio(url);
     currentAudio = audio;
-    audio.addEventListener('ended', resolve);
-    audio.addEventListener('error', resolve);
-    audio.play().catch(resolve);
+    audio.addEventListener('ended', () => resolve(true));
+    audio.addEventListener('error', () => resolve(false));
+    audio.play().catch(() => resolve(false));
   });
 }
 
@@ -67,11 +57,8 @@ export function speakWebSpeech(text, voiceProfile = {}) {
 /** Reproduce una lista de { content, audioUrl, voiceProfile } en orden, esperando a que cada uno termine. */
 export async function playSequence(items) {
   for (const item of items) {
-    if (item.audioUrl) {
-      await playAudioUrl(item.audioUrl);
-    } else {
-      await speakWebSpeech(item.content, item.voiceProfile);
-    }
+    const ok = item.audioUrl ? await playAudioUrl(item.audioUrl) : false;
+    if (!ok) await speakWebSpeech(item.content, item.voiceProfile);
   }
 }
 

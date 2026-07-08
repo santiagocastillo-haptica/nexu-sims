@@ -21,7 +21,6 @@ export default function CaseSelect() {
           const appearance = agent.appearance || DEFAULT_APPEARANCE;
           return (
             <button key={agentId} className="case-card" onClick={() => selectAgent(agentId)}>
-              <div className="case-card__stamp">EXPEDIENTE {agentId.split('_')[1]}</div>
               <div className="case-card__portrait">
                 <SimAvatar
                   bodyColor={agent.avatarColor}
@@ -31,15 +30,6 @@ export default function CaseSelect() {
                 />
               </div>
               <div className="case-card__name">{agent.name}</div>
-              {agent.archetype && (
-                <div className="case-card__archetype">
-                  {agent.archetype}
-                  {agent.archetypeStat && (
-                    <span className="case-card__archetype-stat"> · {agent.archetypeStat}</span>
-                  )}
-                </div>
-              )}
-              <p className="case-card__summary">{agent.personalitySummary}</p>
               <div className="case-card__cta">Investigar →</div>
             </button>
           );

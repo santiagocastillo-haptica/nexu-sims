@@ -5,8 +5,8 @@ const router = express.Router();
 
 const ELEVENLABS_MODEL_ID = 'eleven_multilingual_v2';
 
-router.post('/', async (req, res) => {
-  const { text, voiceId } = req.body || {};
+router.get('/', async (req, res) => {
+  const { text, voiceId } = req.query || {};
 
   if (!text || !voiceId) {
     return res.status(400).json({ error: 'Faltan text o voiceId.' });
@@ -17,7 +17,7 @@ router.post('/', async (req, res) => {
   }
 
   try {
-    const elevenRes = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+    const elevenRes = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream`, {
       method: 'POST',
       headers: {
         'xi-api-key': process.env.ELEVENLABS_API_KEY,
@@ -34,6 +34,9 @@ router.post('/', async (req, res) => {
     }
 
     res.setHeader('Content-Type', 'audio/mpeg');
+    // Mismo texto + voz siempre produce el mismo audio: el navegador puede cachearlo y
+    // así "repetir" no vuelve a llamar a ElevenLabs ni gasta créditos de nuevo.
+    res.setHeader('Cache-Control', 'public, max-age=86400, immutable');
     Readable.fromWeb(elevenRes.body).pipe(res);
   } catch (err) {
     console.error('Error en /api/tts:', err);

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useSimStore } from '../state/useSimStore';
 import { streamChat } from '../lib/api';
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
-import { synthesizeAudioUrl, playAudioUrl, speakWebSpeech, playSequence, stopSpeaking } from '../lib/voiceProvider';
+import { buildTtsUrl, playAudioUrl, speakWebSpeech, playSequence, stopSpeaking } from '../lib/voiceProvider';
 import SimAvatar from './SimAvatar';
 
 const DEFAULT_APPEARANCE = { skinTone: '#e7b48c', hairColor: '#3b2a1e', hairStyle: 'short' };
@@ -11,17 +11,11 @@ async function playAgentReply(agentId, messageIndex, text, voiceProfile) {
   const store = useSimStore.getState();
   store.setAgentStatus(agentId, 'hablando');
 
-  let url = null;
-  if (voiceProfile.elevenLabsVoiceId) {
-    url = await synthesizeAudioUrl(text, voiceProfile.elevenLabsVoiceId);
-    if (url) store.setMessageAudio(agentId, messageIndex, url);
-  }
+  const url = buildTtsUrl(text, voiceProfile.elevenLabsVoiceId);
+  if (url) store.setMessageAudio(agentId, messageIndex, url);
 
-  if (url) {
-    await playAudioUrl(url);
-  } else {
-    await speakWebSpeech(text, voiceProfile);
-  }
+  const ok = url ? await playAudioUrl(url) : false;
+  if (!ok) await speakWebSpeech(text, voiceProfile);
 
   store.setAgentStatus(agentId, 'disponible');
 }
@@ -36,6 +30,7 @@ export default function InvestigationRoom() {
   const [input, setInput] = useState('');
   const [isSending, setIsSending] = useState(false);
   const transcriptEndRef = useRef(null);
+  const abortControllerRef = useRef(null);
 
   const { isSupported: micSupported, isListening, transcript, startListening, stopListening } =
     useSpeechRecognition();
@@ -74,9 +69,13 @@ export default function InvestigationRoom() {
     setInput('');
     setIsSending(true);
 
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     await streamChat(
       { agentId: agent.id, message, conversationHistory: history },
       {
+        signal: controller.signal,
         onDelta: (delta) => {
           useSimStore.getState().setAgentStatus(agent.id, 'pensando');
           useSimStore.getState().appendAgentDelta(agent.id, delta);
@@ -94,6 +93,13 @@ export default function InvestigationRoom() {
         },
       }
     );
+  };
+
+  const handleStop = () => {
+    abortControllerRef.current?.abort();
+    stopSpeaking();
+    useSimStore.getState().setAgentStatus(agent.id, 'disponible');
+    setIsSending(false);
   };
 
   const handleKeyDown = (e) => {
@@ -199,6 +205,13 @@ export default function InvestigationRoom() {
             disabled={agent.chatHistory.length === 0}
           >
             ⬇ Descargar conversación
+          </button>
+          <button
+            className="avatar-panel__btn avatar-panel__btn--secondary"
+            onClick={handleStop}
+            disabled={!isSending && agent.status !== 'hablando'}
+          >
+            ■ Detener
           </button>
         </div>
 

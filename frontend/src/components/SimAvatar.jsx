@@ -11,6 +11,14 @@ function Hair({ style, color }) {
       );
     case 'short':
       return <path d="M16 18 Q32 -1 48 18 L48 25 Q32 12 16 25 Z" fill={color} />;
+    case 'long':
+      return (
+        <>
+          <path d="M16 18 Q32 -1 48 18 L48 25 Q32 12 16 25 Z" fill={color} />
+          <path d="M15 20 Q11 36 16 51 Q20 53 22.5 49 Q19 36 21 21 Z" fill={color} />
+          <path d="M49 20 Q53 36 48 51 Q44 53 41.5 49 Q45 36 43 21 Z" fill={color} />
+        </>
+      );
     case 'bun':
       return (
         <>
